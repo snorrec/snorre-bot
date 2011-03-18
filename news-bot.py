@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 from twisted.words.protocols import irc
 from twisted.internet import protocol
 from twisted.internet import reactor
 import sys
-import sitscrape
+import newsscrape
 
-class DinnerBot(irc.IRCClient):
+class NewsBot(irc.IRCClient):
 	def _get_nickname(self):
 		return self.factory.nickname
 	nickname = property(_get_nickname)
@@ -19,18 +20,17 @@ class DinnerBot(irc.IRCClient):
 	def privmsg(self, user, channel, msg):
 		if not user:
 			return
-		if "!middag" in msg:
-			sites = { "Realfag":"http://www.sit.no/content/36447/Ukas-middagsmeny-pa-Realfag", 
-					"Hangaren":"http://www.sit.no/content/36444/Ukas-middagsmeny-pa-Hangaren"}
+		if "!nyheter" in msg:
+			site = "http://www.vg.no/rss/create.php"
 			#TODO rate limit this, and cache...
-			menu_lines = sitscrape.todays_menu(sites)
-			self.msg(self.factory.channel, "Today's menu is..")
-			for line in menu_lines:
+			news_lines = newsscrape.get_news(site)
+			self.msg(self.factory.channel, "*** Nyheter fra VG RSS ***")
+			for line in news_lines:
 				self.msg(self.factory.channel, line)
 
-class DinnerBotFactory(protocol.ClientFactory):
-    protocol = DinnerBot
-    def __init__(self, channel, nickname='habeebs'):
+class NewsBotFactory(protocol.ClientFactory):
+    protocol = NewsBot
+    def __init__(self, channel, nickname):
         self.channel = channel
         self.nickname = nickname
         
@@ -46,10 +46,10 @@ if __name__ == "__main__":
 		nick = sys.argv[1]
 		chan = sys.argv[2]
 		server = sys.argv[3]
-		reactor.connectTCP(server, 6667, DinnerBotFactory("#"+chan, nick))
+		reactor.connectTCP(server, 6667, NewsBotFactory("#"+chan, nick))
 		reactor.run()
 	except:
 		print "Usage:"
-		print "python sit-dinner-bot.py nick channel server"
+		print "python news-bot.py nick channel server"
 		print ""
 		print "Omit # for channel"
