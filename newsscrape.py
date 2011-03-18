@@ -21,7 +21,9 @@ def extract_news(doc):
 	titles = []
 	descriptions = []
 	links = []
-	news = {"titles":titles, "descriptions":descriptions, "links":links}
+	times = []
+	
+	news = {"titles":titles, "descriptions":descriptions, "links":links, "times":times}
 	
 	for title in soup.findAll("title"):
 		if("VG RSS" not in title and "VG RSS " not in title):
@@ -33,6 +35,9 @@ def extract_news(doc):
 			
 	for link in soup.findAll("guid"):
 		links.append(mangle(link))
+	
+	for a in soup.findAll("pubdate"):
+		times.append(mangle(a)[17:22])
 		
 	return news
 		
@@ -44,7 +49,7 @@ def get_news(url):
 	news_lines = []
 	
 	for i in xrange(len(news["titles"])):
-		news_lines.append(news["titles"][i] +"- " + news["links"][i])
+		news_lines.append("("+news["times"][i]+")" +" "+news["titles"][i] +"- " + news["links"][i])
 		#news_lines.append(news["descriptions"][i])
 		#news_lines.append("")
 	
